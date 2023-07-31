@@ -40,8 +40,10 @@ int main() {
 
     // char *instructions1[10] = {"ADD", "SUB", "HTL"};
     // char *instructions2[10] = {"ADD2", "SUB2", "HTL"};
-    Process process1 = create_process(1, 3, (char [][MAX_INSTRUCTION_LENGTH]) {"ADD", "SUB", "HTL"}, 3);  // TODO: num_instructions automatico
+    Process process1 = create_process(1, 3, (char [][MAX_INSTRUCTION_LENGTH]) {"ADD", "SUB", "HTL"}, 3);  // TODO?: num_instructions automatico
     Process process2 = create_process(2, 5, (char [][MAX_INSTRUCTION_LENGTH]) {"ADD2", "SUB2", "HTL"}, 3);
+    Process process3 = create_process(3, 2, (char[][MAX_INSTRUCTION_LENGTH]){"ADD3", "SUB3", "HTL"}, 3);
+
     // Process process1 = create_process(1, 3, instructions1);
     // Process process2 = create_process(2, 5, instructions2);
 
@@ -49,14 +51,15 @@ int main() {
     // TCB tcb_process1 = {process.pid, process.state, process.program_counter};
     // TCB tcb_process2 = {process2.pid, process2.state, process2.program_counter};
 
-    printf("initial memory_bitmap: ");
-    for (int i = 0; i < MEMORY_SIZE; i++) {
-        printf("%d ", memory_bitmap[i]);
-    }
-    printf("\n");
+    // printf("initial memory_bitmap: ");
+    // for (int i = 0; i < MEMORY_SIZE; i++) {
+    //     printf("%d ", memory_bitmap[i]);
+    // }
+    // printf("\n");
 
     enqueue(ready_queue, process1);
     enqueue(ready_queue, process2);
+    enqueue(ready_queue, process3);
 
     // // Simular a execução dos processos (Sequencial)
     // while (!is_queue_empty(ready_queue)) {
@@ -89,7 +92,7 @@ int main() {
     while (!is_queue_empty(ready_queue)) {
         Process current_process = dequeue(ready_queue);
 
-        printf("Executando processo %d\n", current_process.pid); // substituir por TCB
+        // printf("Executando processo %d\n", current_process.pid); // substituir por TCB
 
         int process_remaining_instructions = current_process.num_instructions - current_process.program_counter;  // 3
         int instructions_to_execute = process_remaining_instructions < current_process.max_instructions_execution // 2
@@ -100,15 +103,21 @@ int main() {
             char* instruction = current_process.instructions[current_process.program_counter];
 
             // printf("Executando instrucao: %s\n", instruction);
+            printf("TCB: PID=%d , PC: %d\n", current_process.pid, current_process.program_counter);
+            printf("\n");
+
             display_process_status(current_process);
+            printf("\n");
 
             printf("memory_bitmap: ");
             for (int i = 0; i < MEMORY_SIZE; i++) {
                 printf("%d ", memory_bitmap[i]);
             }
             printf("\n");
+            printf("\n");
 
             display_ready_queue(*ready_queue);
+
 
             // Verificar o fim do processo
             if (strcmp(instruction, "HTL") == 0) {
@@ -132,10 +141,14 @@ int main() {
             enqueue(ready_queue, current_process);
         }
         else {
+            printf("TCB: PID=%d , PC: %d\n", current_process.pid, current_process.program_counter);
+            printf("\n");
+
             printf("memory_bitmap: ");
             for (int i = 0; i < MEMORY_SIZE; i++) {
                 printf("%d ", memory_bitmap[i]);
             }
+            printf("\n");
             printf("\n");
 
             display_ready_queue(*ready_queue);
@@ -158,11 +171,11 @@ int main() {
 
     free(ready_queue);
 
-    printf("final memory_bitmap: ");
-    for (int i = 0; i < MEMORY_SIZE; i++) {
-        printf("%d ", memory_bitmap[i]);
-    }
-    printf("\n");
+    // printf("final memory_bitmap: ");
+    // for (int i = 0; i < MEMORY_SIZE; i++) {
+    //     printf("%d ", memory_bitmap[i]);
+    // }
+    // printf("\n");
     // for (int i = 0; i < MEMORY_SIZE; i++) {
     //     printf("%d ", memory_bitmap[i]);
     // }
