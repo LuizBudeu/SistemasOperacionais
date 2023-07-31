@@ -5,6 +5,33 @@
 #include "../include/memoria.h"
 
 
+// Função para exibir o status do processo
+void display_process_status(Process process) {
+    for (int i = 0; i < process.num_instructions; i++) {
+        if (i == process.program_counter) {
+            printf("%s <---\n", process.instructions[i]);
+        } else {
+            printf("%s\n", process.instructions[i]);
+        }
+    }
+}
+
+
+// Função para exibir a fila de processos prontos
+void display_ready_queue(Queue queue) {
+    printf("Fila de processos prontos: ");
+    Node* current = queue.front;
+    while (current != NULL) {
+        printf("PID%d", current->process.pid);
+        if (current->next != NULL) {
+            printf(", ");
+        }
+        current = current->next;
+    }
+    printf("\n");
+}
+
+
 int main() {
     init_memory_bitmap();
 
@@ -62,7 +89,7 @@ int main() {
     while (!is_queue_empty(ready_queue)) {
         Process current_process = dequeue(ready_queue);
 
-        printf("Executando processo %d\n", current_process.pid);
+        printf("Executando processo %d\n", current_process.pid); // substituir por TCB
 
         int process_remaining_instructions = current_process.num_instructions - current_process.program_counter;  // 3
         int instructions_to_execute = process_remaining_instructions < current_process.max_instructions_execution // 2
@@ -72,7 +99,16 @@ int main() {
         for (int i = 0; i < instructions_to_execute; i++) {
             char* instruction = current_process.instructions[current_process.program_counter];
 
-            printf("Executando instrucao: %s\n", instruction);
+            // printf("Executando instrucao: %s\n", instruction);
+            display_process_status(current_process);
+
+            printf("memory_bitmap: ");
+            for (int i = 0; i < MEMORY_SIZE; i++) {
+                printf("%d ", memory_bitmap[i]);
+            }
+            printf("\n");
+
+            display_ready_queue(*ready_queue);
 
             // Verificar o fim do processo
             if (strcmp(instruction, "HTL") == 0) {
@@ -83,12 +119,35 @@ int main() {
             }
 
             current_process.program_counter++;
+
+            // Apertar enter para seguir para próxima instrução
+            char enter = 0;
+            while (enter != '\r' && enter != '\n') {
+                enter = getchar();
+            }
         }
 
         // Se o processo não terminou, adicioná-lo novamente à fila de prontos
         if (current_process.state != PROCESS_STATE_TERMINATED) {
             enqueue(ready_queue, current_process);
         }
+        else {
+            printf("memory_bitmap: ");
+            for (int i = 0; i < MEMORY_SIZE; i++) {
+                printf("%d ", memory_bitmap[i]);
+            }
+            printf("\n");
+
+            display_ready_queue(*ready_queue);
+
+            // Apertar enter para seguir para o próximo ciclo de execução
+            char enter = 0;
+            while (enter != '\r' && enter != '\n') {
+               enter = getchar();
+            }
+        }
+
+
 
         // printf("memory_bitmap: ");
         // for (int i = 0; i < MEMORY_SIZE; i++) {
