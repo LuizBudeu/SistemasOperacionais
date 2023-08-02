@@ -5,18 +5,11 @@
 #include "../include/memoria.h"
 
 
-Process create_process(int pid, int program_size, char instructions[MAX_INSTRUCTIONS][MAX_INSTRUCTION_LENGTH], int num_instructions) {
+Process create_process(int pid, char instructions[MAX_INSTRUCTIONS][MAX_INSTRUCTION_LENGTH], int num_instructions) {
     Process process;
     process.pid = pid;
     process.state = PROCESS_STATE_READY;
-    // process.program_size = program_size;
     process.program_counter = 0;
-    // process.memory_start = allocate_memory(program_size);
-
-    // if (process.memory_start == -1) {
-    //     printf("Erro na alocacao de memoria para o processo %d.\n", pid);
-    //     return process;
-    // }
 
     process.max_instructions_execution = MAX_INSTRUCTION_EXECUTION;
     process.num_instructions = num_instructions;
@@ -85,7 +78,58 @@ int is_queue_empty(Queue* queue) {
 
 
 // Função para obter um processo aleatório do array
-Process get_random_process(Process* processes, int num_processes) {
+Process get_random_process(Process* processes, int num_processes, Queue* ready_queue) {
     int random_index = rand() % num_processes;
-    return processes[random_index];
+    int selected_process = random_index;
+
+    printf("Processo selecionado: %d\n", selected_process);
+
+    // Enquanto o processo selecionado estiver na fila de processos prontos, escolha outro
+    while (is_process_in_queue(ready_queue, selected_process)) {
+        selected_process = rand() % num_processes;
+    }
+
+    return processes[selected_process-1];
+}
+
+
+int is_process_in_queue(Queue* ready_queue, int pid) {
+    printf("Procurando processo %d na fila...\n", pid);
+
+    Node* current = ready_queue->front;
+    printf("PID: %d\n", pid);
+
+    while (current != NULL) {
+        printf("dentro do while\n");
+        if (current->process.pid == pid) {
+            return 1; // Processo encontrado na fila
+        }
+        current = current->next;
+    }
+
+    printf("Processo nao encontrado na fila.\n");
+
+    return 0; // Processo não encontrado na fila
+}
+
+
+void remove_process_by_pid(Queue* ready_queue, int pid) {
+    Node* current = ready_queue->front;
+    Node* previous = NULL;
+
+    while (current != NULL) {
+        if (current->process.pid == pid) {
+            if (previous == NULL) {
+                ready_queue->front = current->next;
+            } else {
+                previous->next = current->next;
+            }
+            deallocate_memory(current->process.memory_start, current->process.program_size);
+            free(current);
+            return;
+        }
+
+        previous = current;
+        current = current->next;
+    }
 }

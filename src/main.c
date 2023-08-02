@@ -20,27 +20,23 @@ int main() {
     // Criar a fila de processos prontos
     Queue* ready_queue = create_queue();
 
-    char instructions1[][MAX_INSTRUCTION_LENGTH] = {"ADD", "SUB", "ADD", "SUB", "ADD", "SUB", "HTL"};
-    char instructions2[][MAX_INSTRUCTION_LENGTH] = {"SUB", "SUB", "MUL", "DIV", "MUL", "HTL"};
-    char instructions3[][MAX_INSTRUCTION_LENGTH] = {"MUL", "MOV", "SUB", "MOV","HTL"};
-    char instructions4[][MAX_INSTRUCTION_LENGTH] = {"MOV", "ADD", "MOV", "HTL"};
-    char instructions5[][MAX_INSTRUCTION_LENGTH] = {"SUB", "ADD", "HTL"};
+    char instructions1[][MAX_INSTRUCTION_LENGTH] = {"ADD", "SUB", "ADD", "SUB", "ADD", "SUB", "MOV", "ADD","HTL"};
+    char instructions2[][MAX_INSTRUCTION_LENGTH] = {"SUB", "SUB", "MUL", "DIV", "MUL", "MOV", "ADD","HTL"};
+    char instructions3[][MAX_INSTRUCTION_LENGTH] = {"MUL", "MOV", "SUB", "MOV","MOV", "ADD","HTL"};
+    char instructions4[][MAX_INSTRUCTION_LENGTH] = {"MOV", "ADD", "MOV","MOV", "ADD", "HTL"};
+    char instructions5[][MAX_INSTRUCTION_LENGTH] = {"SUB", "ADD", "MOV", "ADD","HTL"};
 
-    Process process1 = create_process(1, 3, instructions1, 7);
-    Process process2 = create_process(2, 5, instructions2, 6);
-    Process process3 = create_process(3, 4, instructions3, 5);
-    Process process4 = create_process(4, 3, instructions4, 4);
-    Process process5 = create_process(5, 5, instructions5, 3);
+    Process process1 = create_process(1, instructions1, 9);
+    Process process2 = create_process(2, instructions2, 8);
+    Process process3 = create_process(3, instructions3, 7);
+    Process process4 = create_process(4, instructions4, 6);
+    Process process5 = create_process(5, instructions5, 5);
 
     Process process_array[] = {process1, process2, process3, process4, process5};
     int num_processes = sizeof(process_array) / sizeof(process_array[0]);
 
     // Inicializar a geração de números aleatórios com o tempo atual
     srand(time(NULL));
-
-    // enqueue(ready_queue, process1);
-    // enqueue(ready_queue, process2);
-    // enqueue(ready_queue, process3);
 
     // Simular a execução dos processos (Round Robin (preemptivo))
     while (1) {
@@ -61,12 +57,34 @@ int main() {
 
         Process current_process = dequeue(ready_queue);
 
+        // Verificar se é um processo de eliminação ("kill PID")
+        if (strcmp(current_process.instructions[0], "kill") == 0) {
+            int pid_to_kill = current_process.pid;
+            remove_process_by_pid(ready_queue, pid_to_kill);
+
+            printf("Processo %d removido.\n", pid_to_kill);
+
+            display_tcb(current_process);
+            printf("\n");
+
+            display_process_status(current_process);
+            printf("\n");
+
+            display_memory_bitmap();
+            printf("\n");
+
+            display_ready_queue(*ready_queue);
+            continue;
+        }
+
         int process_remaining_instructions = current_process.num_instructions - current_process.program_counter;
         int instructions_to_execute = process_remaining_instructions < current_process.max_instructions_execution
                                             ? process_remaining_instructions
                                             : current_process.max_instructions_execution;
 
         for (int i = 0; i < instructions_to_execute; i++) {
+            check_commands_txt(process_array, num_processes, ready_queue);
+
             char* instruction = current_process.instructions[current_process.program_counter];
 
             display_tcb(current_process);
@@ -134,7 +152,13 @@ void display_ready_queue(Queue queue) {
     printf("Fila de processos prontos: ");
     Node* current = queue.front;
     while (current != NULL) {
-        printf("PID%d", current->process.pid);
+        if (strcmp(current->process.instructions[0], "kill") == 0) {
+            printf("kill%d", current->process.pid);
+        }
+        else {
+            printf("PID%d", current->process.pid);
+        }
+
         if (current->next != NULL) {
             printf(", ");
         }
@@ -177,11 +201,13 @@ void check_commands_txt(Process* process_array, int num_processes, Queue* ready_
     // Ler cada linha do arquivo e executar os comandos
     char line[100];
     while (fgets(line, sizeof(line), file) != NULL) {
-        // Verificar o comando "create -m X"
+        // char pid_to_kill[MAX_INSTRUCTION_LENGTH];
+        int pid_to_kill;
+
         if (strstr(line, "create -m") != NULL) {
             int mem_required;
             if (sscanf(line, "create -m %d", &mem_required) == 1) {
-                Process new_process = get_random_process(process_array, num_processes);
+                Process new_process = get_random_process(process_array, num_processes, ready_queue);
                 if (mem_required <= 20) {
                     new_process.program_size = mem_required;
                     new_process.memory_start = allocate_memory(mem_required);
@@ -193,6 +219,12 @@ void check_commands_txt(Process* process_array, int num_processes, Queue* ready_
                     enqueue(ready_queue, new_process);
                 }
             }
+        }
+
+        else if (sscanf(line, "kill %d", &pid_to_kill) == 1) {
+            // printf("Comando kill %s encontrado.\n", pid_to_kill);
+            Process kill_process = create_process(pid_to_kill, (char[][MAX_INSTRUCTION_LENGTH]) {"kill"}, 1);
+            enqueue(ready_queue, kill_process);
         }
     }
 

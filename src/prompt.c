@@ -8,8 +8,10 @@ int main() {
   int memory_units;
   int pid;
 
+  printf("Comandos suportados: create -m {unidades_de_memoria}, kill {PID}\n");
+
   while (1) {
-    printf("Digite um comando: ");
+    printf("> ");
     fgets(command, MAX_COMMAND_LENGTH, stdin);
     if (strcmp(command, "exit\n") == 0) {
       break;
@@ -33,13 +35,19 @@ int main() {
       fclose(file);
 
     }
-    // // Comando "kill PID"
-    // else if (sscanf(command, "kill %d", &pid) == 1) {
-    //   fprintf(file, "kill %d\n", pid);
-    //   fflush(file);
-    // } else {
-    //   printf("Comando invalido. Comandos suportados: create -m X, kill PID\n");
-    // }
+    // Comando "kill PID"
+    else if (sscanf(command, "kill %d", &pid) == 1) {
+      FILE *file = fopen("comandos.txt", "w");
+        if (file == NULL) {
+          perror("fopen");
+          return 1;
+        }
+      fprintf(file, "kill %d\n", pid);
+      fflush(file);
+      fclose(file);
+    } else {
+      printf("Comando invalido. Comandos suportados: create -m {unidades_de_memoria}, kill {PID}\n");
+    }
   }
 
   // fclose(file);
