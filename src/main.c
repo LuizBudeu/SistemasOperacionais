@@ -6,53 +6,12 @@
 #include "../include/memoria.h"
 
 
-// Função para exibir o status do processo
-void display_process_status(Process process) {
-    for (int i = 0; i < process.num_instructions; i++) {
-        if (i == process.program_counter) {
-            printf("%s <---\n", process.instructions[i]);
-        } else {
-            printf("%s\n", process.instructions[i]);
-        }
-    }
-}
-
-
-// Função para exibir a fila de processos prontos
-void display_ready_queue(Queue queue) {
-    printf("Fila de processos prontos: ");
-    Node* current = queue.front;
-    while (current != NULL) {
-        printf("PID%d", current->process.pid);
-        if (current->next != NULL) {
-            printf(", ");
-        }
-        current = current->next;
-    }
-    printf("\n");
-}
-
-
-void display_memory_bitmap() {
-    printf("memory_bitmap: ");
-    for (int i = 0; i < MEMORY_SIZE; i++) {
-        printf("%d ", memory_bitmap[i]);
-    }
-    printf("\n");
-}
-
-
-void display_tcb(Process current_process) {
-    printf("TCB: PID=%d , PC: %d, REG AX:, REG BX: \n", current_process.pid, current_process.program_counter);
-}
-
-void continue_to_next_cycle() {
-    // Apertar enter para seguir para próxima instrução
-    char enter = 0;
-    while (enter != '\r' && enter != '\n') {
-        enter = getchar();
-    }
-}
+void display_process_status(Process process);
+void display_ready_queue(Queue queue);
+void display_memory_bitmap();
+void display_tcb();
+void continue_to_next_cycle();
+void check_commands_txt(Process* process_array, int num_processes, Queue* ready_queue);
 
 
 int main() {
@@ -79,15 +38,15 @@ int main() {
     // Inicializar a geração de números aleatórios com o tempo atual
     srand(time(NULL));
 
-    // Obter um processo aleatório do array
-    Process random_process = get_random_process(process_array, num_processes);
-
-    enqueue(ready_queue, process1);
-    enqueue(ready_queue, process2);
-    enqueue(ready_queue, process3);
+    // enqueue(ready_queue, process1);
+    // enqueue(ready_queue, process2);
+    // enqueue(ready_queue, process3);
 
     // Simular a execução dos processos (Round Robin (preemptivo))
     while (1) {
+
+        check_commands_txt(process_array, num_processes, ready_queue);
+
         if (is_queue_empty(ready_queue)) {
             printf("Nenhum processo na fila de prontos.\n");
 
@@ -155,4 +114,99 @@ int main() {
     free(ready_queue);
     return 0;
     
+}
+
+
+// Função para exibir o status do processo
+void display_process_status(Process process) {
+    for (int i = 0; i < process.num_instructions; i++) {
+        if (i == process.program_counter) {
+            printf("%s <---\n", process.instructions[i]);
+        } else {
+            printf("%s\n", process.instructions[i]);
+        }
+    }
+}
+
+
+// Função para exibir a fila de processos prontos
+void display_ready_queue(Queue queue) {
+    printf("Fila de processos prontos: ");
+    Node* current = queue.front;
+    while (current != NULL) {
+        printf("PID%d", current->process.pid);
+        if (current->next != NULL) {
+            printf(", ");
+        }
+        current = current->next;
+    }
+    printf("\n");
+}
+
+
+void display_memory_bitmap() {
+    printf("memory_bitmap: ");
+    for (int i = 0; i < MEMORY_SIZE; i++) {
+        printf("%d ", memory_bitmap[i]);
+    }
+    printf("\n");
+}
+
+
+void display_tcb(Process current_process) {
+    printf("TCB: PID=%d , PC: %d, REG AX: ..., REG BX: ...\n", current_process.pid, current_process.program_counter);
+}
+
+
+void continue_to_next_cycle() {
+    // Apertar enter para seguir para próxima instrução
+    char enter = 0;
+    while (enter != '\r' && enter != '\n') {
+        enter = getchar();
+    }
+}
+
+
+void check_commands_txt(Process* process_array, int num_processes, Queue* ready_queue) {
+    FILE* file = fopen("bin/comandos.txt", "r");
+    if (file == NULL) {
+        printf("Erro ao abrir o arquivo de comandos.\n");
+        return;
+    }
+
+    // Ler cada linha do arquivo e executar os comandos
+    char line[100];
+    while (fgets(line, sizeof(line), file) != NULL) {
+        // Verificar o comando "create -m X"
+        if (strstr(line, "create -m") != NULL) {
+            int mem_required;
+            if (sscanf(line, "create -m %d", &mem_required) == 1) {
+                Process new_process = get_random_process(process_array, num_processes);
+                if (mem_required <= 20) {
+                    new_process.program_size = mem_required;
+                    new_process.memory_start = allocate_memory(mem_required);
+
+                    if (new_process.memory_start == -1) {
+                        printf("Erro na alocacao de memoria para o processo %d.\n", new_process.pid);
+                    }
+
+                    enqueue(ready_queue, new_process);
+                }
+            }
+        }
+    }
+
+    // Fechar o arquivo
+    fclose(file);
+
+    // Fechar e reabrir o arquivo no modo de escrita para apagar seu conteúdo
+    fclose(file);
+    file = fopen("bin/comandos.txt", "w");
+    if (file == NULL) {
+        printf("Erro ao reabrir o arquivo de comandos.\n");
+        return;
+    }
+
+    // Fechar o arquivo novamente
+    fclose(file);
 }

@@ -9,23 +9,20 @@ Process create_process(int pid, int program_size, char instructions[MAX_INSTRUCT
     Process process;
     process.pid = pid;
     process.state = PROCESS_STATE_READY;
-    process.program_size = program_size;
+    // process.program_size = program_size;
     process.program_counter = 0;
-    process.memory_start = allocate_memory(program_size);
+    // process.memory_start = allocate_memory(program_size);
 
-    if (process.memory_start == -1) {
-        printf("Erro na alocacao de memoria para o processo %d.\n", pid);
-        return process;
-    }
+    // if (process.memory_start == -1) {
+    //     printf("Erro na alocacao de memoria para o processo %d.\n", pid);
+    //     return process;
+    // }
 
     process.max_instructions_execution = MAX_INSTRUCTION_EXECUTION;
     process.num_instructions = num_instructions;
 
     for (int i = 0; i < num_instructions; i++) {
-        // printf("Instrucao %d: %s\n", i, instructions[i]);
-        // printf("Instrucao %d: %s\n", i, process.instructions[i]);
         strcpy(process.instructions[i], instructions[i]);
-        // printf("Instrucao %d: %s\n", i, process.instructions[i]);
     }
     return process;
 }

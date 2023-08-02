@@ -1,32 +1,61 @@
+# CC = gcc
+# CFLAGS = -Wall -Wextra
+
+# SRCDIR = src
+# OBJDIR = obj
+# BINDIR = bin
+
+# # Lista de arquivos de código-fonte e objetos
+# SOURCES = $(wildcard $(SRCDIR)/*.c)
+# SOURCES := $(filter-out src/prompt.c, $(SOURCES))
+# SOURCES := $(filter-out src/prompt.exe, $(SOURCES))
+# OBJECTS = $(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(SOURCES))
+
+# # Nome do executável
+# EXECUTABLE = $(BINDIR)/simulador
+
+# all: $(EXECUTABLE)
+
+# $(EXECUTABLE): $(OBJECTS)
+# 	$(CC) $(CFLAGS) -o $@ $^
+
+# $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR) $(BINDIR)  # Dependências para os diretórios obj e bin
+# 	$(CC) $(CFLAGS) -c -o $@ $<
+
+# $(OBJDIR):
+# 	mkdir -p $(OBJDIR) 
+
+# $(BINDIR):
+# 	mkdir -p $(BINDIR) 
+
+# clean:
+# 	rm -rf $(OBJDIR) $(BINDIR)
+
+# .PHONY: clean
+
+
 CC = gcc
-CFLAGS = -Wall -Wextra
+CFLAGS = -Wall -Wextra -std=c99
 
-SRCDIR = src
-OBJDIR = obj
-BINDIR = bin
+SIMULADOR_SOURCES = src/memoria.c src/processo.c src/main.c
+PROMPT_SOURCES = src/prompt.c
 
-# Lista de arquivos de código-fonte e objetos
-SOURCES = $(wildcard $(SRCDIR)/*.c)
-OBJECTS = $(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(SOURCES))
+SIMULADOR_OBJECTS = $(patsubst src/%.c,obj/%.o,$(SIMULADOR_SOURCES))
+PROMPT_OBJECTS = $(patsubst src/%.c,obj/%.o,$(PROMPT_SOURCES))
 
-# Nome do executável
-EXECUTABLE = $(BINDIR)/simulador
+BIN_DIR = bin
+OBJ_DIR = obj
 
-all: $(EXECUTABLE)
+all: simulador prompt
 
-$(EXECUTABLE): $(OBJECTS)
-	$(CC) $(CFLAGS) -o $@ $^
+simulador: $(SIMULADOR_OBJECTS)
+	$(CC) $(CFLAGS) $(SIMULADOR_OBJECTS) -o $(BIN_DIR)/simulador
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR) $(BINDIR)  # Dependências para os diretórios obj e bin
-	$(CC) $(CFLAGS) -c -o $@ $<
+prompt: $(PROMPT_OBJECTS)
+	$(CC) $(CFLAGS) $(PROMPT_OBJECTS) -o $(BIN_DIR)/prompt
 
-$(OBJDIR):
-	mkdir -p $(OBJDIR) 
-
-$(BINDIR):
-	mkdir -p $(BINDIR) 
+$(OBJ_DIR)/%.o: src/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -rf $(OBJDIR) $(BINDIR)
-
-.PHONY: clean
+	rm -f $(BIN_DIR)/simulador $(BIN_DIR)/prompt $(SIMULADOR_OBJECTS) $(PROMPT_OBJECTS)

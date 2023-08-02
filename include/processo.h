@@ -20,19 +20,10 @@ typedef struct {
     int program_size;
     int program_counter;
     char instructions[MAX_INSTRUCTIONS][MAX_INSTRUCTION_LENGTH];
-    // char** instructions;
     int memory_start;
     int max_instructions_execution;
     int num_instructions;
 } Process;
-
-
-// typedef struct {
-//     // int pid;
-//     // int state;
-//     // int program_counter;
-//     Process process;
-// } TCB;
 
 
 typedef struct Node {
@@ -50,10 +41,6 @@ typedef struct {
 Process create_process(int pid, int program_size, char instructions[MAX_INSTRUCTIONS][MAX_INSTRUCTION_LENGTH], int num_instructions);
 void finish_process(Process process, int memory_start);
 
-// Queue* create_queue();
-// void enqueue(Queue* queue, TCB tcb);
-// TCB dequeue(Queue* queue);
-// int is_queue_empty(Queue* queue);
 
 Queue* create_queue();
 void enqueue(Queue* queue, Process process);
