@@ -22,7 +22,10 @@ Process create_process(int pid, int program_size, char instructions[MAX_INSTRUCT
     process.num_instructions = num_instructions;
 
     for (int i = 0; i < num_instructions; i++) {
+        // printf("Instrucao %d: %s\n", i, instructions[i]);
+        // printf("Instrucao %d: %s\n", i, process.instructions[i]);
         strcpy(process.instructions[i], instructions[i]);
+        // printf("Instrucao %d: %s\n", i, process.instructions[i]);
     }
     return process;
 }
@@ -83,3 +86,9 @@ int is_queue_empty(Queue* queue) {
     return queue->front == NULL;
 }
 
+
+// Função para obter um processo aleatório do array
+Process get_random_process(Process* processes, int num_processes) {
+    int random_index = rand() % num_processes;
+    return processes[random_index];
+}

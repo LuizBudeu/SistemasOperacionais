@@ -20,6 +20,7 @@ typedef struct {
     int program_size;
     int program_counter;
     char instructions[MAX_INSTRUCTIONS][MAX_INSTRUCTION_LENGTH];
+    // char** instructions;
     int memory_start;
     int max_instructions_execution;
     int num_instructions;
@@ -59,5 +60,6 @@ void enqueue(Queue* queue, Process process);
 Process dequeue(Queue* queue);
 int is_queue_empty(Queue* queue);
 
+Process get_random_process(Process* process, int num_processes);
 
 #endif
