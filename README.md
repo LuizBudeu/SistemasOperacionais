@@ -13,3 +13,4 @@
 -   Kill command
 -   Comandos entrando na fila
 -   ~~BUGFIX: se a fila fica vazia depois de um kill, o create não funciona mais~~ resolvido
+-   TODO: Compactação da memória

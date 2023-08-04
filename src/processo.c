@@ -50,13 +50,9 @@ void enqueue(Queue* queue, Process process) {
     new_node->process = process;
     new_node->next = NULL;
 
-    printf(queue->front == NULL ? "front == NULL\n" : "front != NULL\n");
-
     if (queue->rear == NULL) {
-        printf("rear == NULL\n");
         queue->front = new_node;
     } else {
-        printf("rear != NULL\n");
         queue->rear->next = new_node;
     }
     queue->rear = new_node;
@@ -182,4 +178,68 @@ Process get_process_by_pid(Process* process_array, int num_processes, int pid) {
     Process empty_process = {0}; // Process com valores zerados
     printf("Processo com PID %d nao encontrado.\n", pid);
     return empty_process; // PID não encontrado
+}
+
+
+// void compact_memory(Process processes[], int num_processes) {
+//     int current_position = 0;
+
+//     for (int i = 0; i < num_processes; i++) {
+//         if (processes[i].memory_start != current_position) {
+//             // Move o processo para a nova posição
+//             processes[i].memory_start = current_position;
+//             // Atualiza outras estruturas de dados, se necessário
+//         }
+        
+//         current_position += processes[i].program_size;
+//     }
+// }
+
+
+void compact_memory(Queue* ready_queue) {
+    int current_position = 0;
+
+    Node* current = ready_queue->front;
+    while (current != NULL) {
+        if (current->process.memory_start != current_position) {
+            // Move o processo para a nova posição
+            current->process.memory_start = current_position;
+            // Atualiza outras estruturas de dados, se necessário
+        }
+        
+        current_position += current->process.program_size;
+        current = current->next;
+    }
+}
+
+
+// float calculate_fragmentation(Process processes[], int num_processes) {
+//     int total_memory_used = 0;
+//     int total_memory_free = 0;
+
+//     for (int i = 0; i < num_processes; i++) {
+//         total_memory_used += processes[i].program_size;
+
+//         printf("Processo %d: %d program_size, %d memory_start\n", processes[i].pid, processes[i].program_size, processes[i].memory_start);
+//     }
+
+//     printf("Total de memoria usada: %d\n", total_memory_used);
+
+//     total_memory_free = MEMORY_SIZE - total_memory_used;
+//     return (float)total_memory_free / MEMORY_SIZE;
+// }
+
+
+float calculate_fragmentation(Queue* ready_queue) {
+    int total_memory_used = 0;
+    int total_memory_free = 0;
+
+    Node* current = ready_queue->front;
+    while (current != NULL) {
+        total_memory_used += current->process.program_size;
+        current = current->next;
+    }
+
+    total_memory_free = MEMORY_SIZE - total_memory_used;
+    return (float)total_memory_free / MEMORY_SIZE;
 }

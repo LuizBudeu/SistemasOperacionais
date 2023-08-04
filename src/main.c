@@ -43,6 +43,13 @@ int main() {
 
     // Simular a execução dos processos (Round Robin (preemptivo))
     while (1) {
+        float fragmentation = calculate_fragmentation(ready_queue);
+        printf("Fragmentacao externa: %.2f%%\n", fragmentation * 100);
+
+        if (fragmentation <= 0.5) {
+            compact_memory(ready_queue);
+            printf("Memoria compactada.\n");
+        }
 
         check_commands_txt(process_array, num_processes, ready_queue);
 
@@ -70,6 +77,8 @@ int main() {
 
             process_to_create.program_size = current_process.program_size;
             process_to_create.memory_start = allocate_memory(current_process.program_size);
+
+            printf("Processo %d alocado com program_size %d.\n", process_to_create.pid, process_to_create.program_size);
 
             if (process_to_create.memory_start == -1) {
                 printf("Erro na alocacao de memoria para o processo %d.\n", process_to_create.pid);
@@ -263,12 +272,9 @@ void check_commands_txt(Process* process_array, int num_processes, Queue* ready_
 
                 //     enqueue(ready_queue, new_process);
                 // }
-                // printf("Comando create -m %d encontrado.\n", mem_required);
                 int pid = get_random_pid_not_in_queue(ready_queue, process_array, num_processes);
                 Process process_create = create_process(pid, mem_required, (char[][MAX_INSTRUCTION_LENGTH]) {"create"}, 1);
                 enqueue(ready_queue, process_create);
-                // printf("Processo create %d criado.\n", process_create.pid);
-                // printf("%d", ready_queue->front->process.pid);
             }
             else {
                 printf("Comando create -m %d invalido.\n", mem_required);
@@ -276,7 +282,6 @@ void check_commands_txt(Process* process_array, int num_processes, Queue* ready_
         }
 
         else if (sscanf(line, "kill %d", &pid_to_kill) == 1) {
-            // printf("Comando kill %s encontrado.\n", pid_to_kill);
             Process kill_process = create_process(pid_to_kill, 0, (char[][MAX_INSTRUCTION_LENGTH]) {"kill"}, 1);
             enqueue(ready_queue, kill_process);
         }
