@@ -5,11 +5,15 @@
 #include "../include/memoria.h"
 
 
-Process create_process(int pid, char instructions[MAX_INSTRUCTIONS][MAX_INSTRUCTION_LENGTH], int num_instructions) {
+extern int running_process_pid;
+
+
+Process create_process(int pid, int program_size, char instructions[MAX_INSTRUCTIONS][MAX_INSTRUCTION_LENGTH], int num_instructions) {
     Process process;
     process.pid = pid;
     process.state = PROCESS_STATE_READY;
     process.program_counter = 0;
+    process.program_size = program_size;
 
     process.max_instructions_execution = MAX_INSTRUCTION_EXECUTION;
     process.num_instructions = num_instructions;
@@ -23,6 +27,7 @@ Process create_process(int pid, char instructions[MAX_INSTRUCTIONS][MAX_INSTRUCT
 void finish_process(Process process, int memory_start) {
     deallocate_memory(memory_start, process.program_size);
     process.state = PROCESS_STATE_TERMINATED;
+    running_process_pid = -1;
 }
 
 Queue* create_queue() {
@@ -82,10 +87,10 @@ Process get_random_process(Process* processes, int num_processes, Queue* ready_q
     int random_index = rand() % num_processes;
     int selected_process = random_index;
 
-    printf("Processo selecionado: %d\n", selected_process);
+    // printf("Processo selecionado: %d\n", selected_process);
 
     // Enquanto o processo selecionado estiver na fila de processos prontos, escolha outro
-    while (is_process_in_queue(ready_queue, selected_process)) {
+    while (is_process_in_queue(ready_queue, selected_process) && selected_process != running_process_pid) {
         selected_process = rand() % num_processes;
     }
 
@@ -94,20 +99,20 @@ Process get_random_process(Process* processes, int num_processes, Queue* ready_q
 
 
 int is_process_in_queue(Queue* ready_queue, int pid) {
-    printf("Procurando processo %d na fila...\n", pid);
+    // printf("Procurando processo %d na fila...\n", pid);
 
     Node* current = ready_queue->front;
-    printf("PID: %d\n", pid);
+    // printf("PID: %d\n", pid);
 
     while (current != NULL) {
-        printf("dentro do while\n");
+        // printf("dentro do while\n");
         if (current->process.pid == pid) {
             return 1; // Processo encontrado na fila
         }
         current = current->next;
     }
 
-    printf("Processo nao encontrado na fila.\n");
+    // printf("Processo nao encontrado na fila.\n");
 
     return 0; // Processo não encontrado na fila
 }
@@ -132,4 +137,39 @@ void remove_process_by_pid(Queue* ready_queue, int pid) {
         previous = current;
         current = current->next;
     }
+}
+
+
+int get_random_pid_not_in_queue(Queue* ready_queue, Process* process_array, int num_processes) {
+    int num_candidates = 0;
+    int candidates[num_processes];
+
+    // Encontra processos que não estão na fila
+    for (int i = 0; i < num_processes; i++) {
+        if (!is_process_in_queue(ready_queue, process_array[i].pid)) {
+            candidates[num_candidates++] = process_array[i].pid;
+        }
+    }
+
+    // Escolhe aleatoriamente um PID dos candidatos
+    if (num_candidates > 0) {
+        int random_index = rand() % num_candidates;
+        return candidates[random_index];
+    }
+
+    // Retorna -1 se nenhum processo elegível for encontrado
+    return -1;
+}
+
+
+Process get_process_by_pid(Process* process_array, int num_processes, int pid) {
+    for (int i = 0; i < num_processes; i++) {
+        if (process_array[i].pid == pid) {
+            return process_array[i];
+        }
+    }
+
+    Process empty_process = {0}; // Process com valores zerados
+    printf("Processo com PID %d nao encontrado.\n", pid);
+    return empty_process; // PID não encontrado
 }

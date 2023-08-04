@@ -38,7 +38,7 @@ typedef struct {
 } Queue;
 
 
-Process create_process(int pid, char instructions[MAX_INSTRUCTIONS][MAX_INSTRUCTION_LENGTH], int num_instructions);
+Process create_process(int pid, int program_size, char instructions[MAX_INSTRUCTIONS][MAX_INSTRUCTION_LENGTH], int num_instructions);
 void finish_process(Process process, int memory_start);
 
 
@@ -50,5 +50,7 @@ int is_queue_empty(Queue* queue);
 Process get_random_process(Process* process, int num_processes, Queue* ready_queue);
 int is_process_in_queue(Queue* ready_queue, int pid);
 void remove_process_by_pid(Queue* ready_queue, int pid);
+int get_random_pid_not_in_queue(Queue* ready_queue, Process* process_array, int num_processes);
+Process get_process_by_pid(Process* process_array, int num_processes, int pid);
 
 #endif

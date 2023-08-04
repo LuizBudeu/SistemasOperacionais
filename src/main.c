@@ -14,6 +14,9 @@ void continue_to_next_cycle();
 void check_commands_txt(Process* process_array, int num_processes, Queue* ready_queue);
 
 
+int running_process_pid = -1;
+
+
 int main() {
     init_memory_bitmap();
 
@@ -26,11 +29,11 @@ int main() {
     char instructions4[][MAX_INSTRUCTION_LENGTH] = {"MOV", "ADD", "MOV","MOV", "ADD", "HTL"};
     char instructions5[][MAX_INSTRUCTION_LENGTH] = {"SUB", "ADD", "MOV", "ADD","HTL"};
 
-    Process process1 = create_process(1, instructions1, 9);
-    Process process2 = create_process(2, instructions2, 8);
-    Process process3 = create_process(3, instructions3, 7);
-    Process process4 = create_process(4, instructions4, 6);
-    Process process5 = create_process(5, instructions5, 5);
+    Process process1 = create_process(1, 0, instructions1, 9);
+    Process process2 = create_process(2, 0, instructions2, 8);
+    Process process3 = create_process(3, 0, instructions3, 7);
+    Process process4 = create_process(4, 0, instructions4, 6);
+    Process process5 = create_process(5, 0, instructions5, 5);
 
     Process process_array[] = {process1, process2, process3, process4, process5};
     int num_processes = sizeof(process_array) / sizeof(process_array[0]);
@@ -57,6 +60,41 @@ int main() {
 
         Process current_process = dequeue(ready_queue);
 
+        running_process_pid = current_process.pid;
+
+        // Verificar se é um processo de criação ("new PID")
+        if (strcmp(current_process.instructions[0], "create") == 0) {
+            int create_pid = current_process.pid;
+
+            Process process_to_create = get_process_by_pid(process_array, num_processes, create_pid);
+
+            process_to_create.program_size = current_process.program_size;
+            process_to_create.memory_start = allocate_memory(current_process.program_size);
+
+            if (process_to_create.memory_start == -1) {
+                printf("Erro na alocacao de memoria para o processo %d.\n", process_to_create.pid);
+            }
+
+            enqueue(ready_queue, process_to_create);
+
+            printf("Processo %d criado.\n", create_pid);
+
+            display_tcb(current_process);
+            printf("\n");
+
+            display_process_status(current_process);
+            printf("\n");
+
+            display_memory_bitmap();
+            printf("\n");
+
+            display_ready_queue(*ready_queue);
+
+            continue_to_next_cycle();
+
+            continue;
+        }
+
         // Verificar se é um processo de eliminação ("kill PID")
         if (strcmp(current_process.instructions[0], "kill") == 0) {
             int pid_to_kill = current_process.pid;
@@ -74,6 +112,9 @@ int main() {
             printf("\n");
 
             display_ready_queue(*ready_queue);
+
+            continue_to_next_cycle();
+
             continue;
         }
 
@@ -104,6 +145,7 @@ int main() {
                 printf("Processo %d terminou.\n", current_process.pid);
                 deallocate_memory(current_process.memory_start, current_process.program_size);
                 current_process.state = PROCESS_STATE_TERMINATED;
+                running_process_pid = -1;
                 break;
             }
 
@@ -154,6 +196,9 @@ void display_ready_queue(Queue queue) {
     while (current != NULL) {
         if (strcmp(current->process.instructions[0], "kill") == 0) {
             printf("kill%d", current->process.pid);
+        }
+        else if (strcmp(current->process.instructions[0], "create") == 0) {
+            printf("create%d", current->process.pid);
         }
         else {
             printf("PID%d", current->process.pid);
@@ -207,23 +252,31 @@ void check_commands_txt(Process* process_array, int num_processes, Queue* ready_
         if (strstr(line, "create -m") != NULL) {
             int mem_required;
             if (sscanf(line, "create -m %d", &mem_required) == 1) {
-                Process new_process = get_random_process(process_array, num_processes, ready_queue);
-                if (mem_required <= 20) {
-                    new_process.program_size = mem_required;
-                    new_process.memory_start = allocate_memory(mem_required);
+                // Process new_process = get_random_process(process_array, num_processes, ready_queue);
+                // if (mem_required <= 20) {
+                //     new_process.program_size = mem_required;
+                //     new_process.memory_start = allocate_memory(mem_required);
 
-                    if (new_process.memory_start == -1) {
-                        printf("Erro na alocacao de memoria para o processo %d.\n", new_process.pid);
-                    }
+                //     if (new_process.memory_start == -1) {
+                //         printf("Erro na alocacao de memoria para o processo %d.\n", new_process.pid);
+                //     }
 
-                    enqueue(ready_queue, new_process);
-                }
+                //     enqueue(ready_queue, new_process);
+                // }
+                printf("Comando create -m %d encontrado.\n", mem_required);
+                int pid = get_random_pid_not_in_queue(ready_queue, process_array, num_processes);
+                Process process_create = create_process(pid, mem_required, (char[][MAX_INSTRUCTION_LENGTH]) {"create"}, 1);
+                enqueue(ready_queue, process_create);
+                printf("Processo create %d criado.\n", pid);
+            }
+            else {
+                printf("Comando create -m %d invalido.\n", mem_required);
             }
         }
 
         else if (sscanf(line, "kill %d", &pid_to_kill) == 1) {
             // printf("Comando kill %s encontrado.\n", pid_to_kill);
-            Process kill_process = create_process(pid_to_kill, (char[][MAX_INSTRUCTION_LENGTH]) {"kill"}, 1);
+            Process kill_process = create_process(pid_to_kill, 0, (char[][MAX_INSTRUCTION_LENGTH]) {"kill"}, 1);
             enqueue(ready_queue, kill_process);
         }
     }
