@@ -50,9 +50,13 @@ void enqueue(Queue* queue, Process process) {
     new_node->process = process;
     new_node->next = NULL;
 
+    printf(queue->front == NULL ? "front == NULL\n" : "front != NULL\n");
+
     if (queue->rear == NULL) {
+        printf("rear == NULL\n");
         queue->front = new_node;
     } else {
+        printf("rear != NULL\n");
         queue->rear->next = new_node;
     }
     queue->rear = new_node;
@@ -126,6 +130,11 @@ void remove_process_by_pid(Queue* ready_queue, int pid) {
         if (current->process.pid == pid) {
             if (previous == NULL) {
                 ready_queue->front = current->next;
+
+                // Verifique se a fila está vazia após a remoção
+                if (ready_queue->front == NULL) {
+                    ready_queue->rear = NULL;
+                }
             } else {
                 previous->next = current->next;
             }
@@ -138,6 +147,7 @@ void remove_process_by_pid(Queue* ready_queue, int pid) {
         current = current->next;
     }
 }
+
 
 
 int get_random_pid_not_in_queue(Queue* ready_queue, Process* process_array, int num_processes) {

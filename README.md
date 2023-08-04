@@ -12,4 +12,4 @@
 -   Create command
 -   Kill command
 -   Comandos entrando na fila
--   BUGFIX: depois de fazer um kill, o create não funciona
+-   ~~BUGFIX: se a fila fica vazia depois de um kill, o create não funciona mais~~ resolvido

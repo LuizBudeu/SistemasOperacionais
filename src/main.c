@@ -195,10 +195,10 @@ void display_ready_queue(Queue queue) {
     Node* current = queue.front;
     while (current != NULL) {
         if (strcmp(current->process.instructions[0], "kill") == 0) {
-            printf("kill%d", current->process.pid);
+            printf("KILL%d", current->process.pid);
         }
         else if (strcmp(current->process.instructions[0], "create") == 0) {
-            printf("create%d", current->process.pid);
+            printf("CREATE%d", current->process.pid);
         }
         else {
             printf("PID%d", current->process.pid);
@@ -263,11 +263,12 @@ void check_commands_txt(Process* process_array, int num_processes, Queue* ready_
 
                 //     enqueue(ready_queue, new_process);
                 // }
-                printf("Comando create -m %d encontrado.\n", mem_required);
+                // printf("Comando create -m %d encontrado.\n", mem_required);
                 int pid = get_random_pid_not_in_queue(ready_queue, process_array, num_processes);
                 Process process_create = create_process(pid, mem_required, (char[][MAX_INSTRUCTION_LENGTH]) {"create"}, 1);
                 enqueue(ready_queue, process_create);
-                printf("Processo create %d criado.\n", pid);
+                // printf("Processo create %d criado.\n", process_create.pid);
+                // printf("%d", ready_queue->front->process.pid);
             }
             else {
                 printf("Comando create -m %d invalido.\n", mem_required);
