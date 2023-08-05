@@ -43,13 +43,13 @@ int main() {
 
     // Simular a execução dos processos (Round Robin (preemptivo))
     while (1) {
-        float fragmentation = calculate_fragmentation(ready_queue);
-        printf("Fragmentacao externa: %.2f%%\n", fragmentation * 100);
+        // float fragmentation = calculate_fragmentation(ready_queue);
+        // printf("Fragmentacao externa: %.2f%%\n", fragmentation * 100);
 
-        if (fragmentation <= 0.5) {
-            compact_memory(ready_queue);
-            printf("Memoria compactada.\n");
-        }
+        // if (fragmentation <= 0.5) {
+        //     compact_memory(ready_queue);
+        //     printf("Memoria compactada.\n");
+        // }
 
         check_commands_txt(process_array, num_processes, ready_queue);
 
