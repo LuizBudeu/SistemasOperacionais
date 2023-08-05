@@ -148,13 +148,13 @@ int main() {
 
             display_ready_queue(*ready_queue);
 
-
             // Verificar o fim do processo
             if (strcmp(instruction, "HTL") == 0) {
                 printf("Processo %d terminou.\n", current_process.pid);
                 deallocate_memory(current_process.memory_start, current_process.program_size);
                 current_process.state = PROCESS_STATE_TERMINATED;
                 running_process_pid = -1;
+                // finish_process(current_process);
                 break;
             }
 
@@ -255,23 +255,11 @@ void check_commands_txt(Process* process_array, int num_processes, Queue* ready_
     // Ler cada linha do arquivo e executar os comandos
     char line[100];
     while (fgets(line, sizeof(line), file) != NULL) {
-        // char pid_to_kill[MAX_INSTRUCTION_LENGTH];
         int pid_to_kill;
 
         if (strstr(line, "create -m") != NULL) {
             int mem_required;
             if (sscanf(line, "create -m %d", &mem_required) == 1) {
-                // Process new_process = get_random_process(process_array, num_processes, ready_queue);
-                // if (mem_required <= 20) {
-                //     new_process.program_size = mem_required;
-                //     new_process.memory_start = allocate_memory(mem_required);
-
-                //     if (new_process.memory_start == -1) {
-                //         printf("Erro na alocacao de memoria para o processo %d.\n", new_process.pid);
-                //     }
-
-                //     enqueue(ready_queue, new_process);
-                // }
                 int pid = get_random_pid_not_in_queue(ready_queue, process_array, num_processes);
                 Process process_create = create_process(pid, mem_required, (char[][MAX_INSTRUCTION_LENGTH]) {"create"}, 1);
                 enqueue(ready_queue, process_create);
@@ -286,9 +274,6 @@ void check_commands_txt(Process* process_array, int num_processes, Queue* ready_
             enqueue(ready_queue, kill_process);
         }
     }
-
-    // Fechar o arquivo
-    fclose(file);
 
     // Fechar e reabrir o arquivo no modo de escrita para apagar seu conteúdo
     fclose(file);

@@ -39,7 +39,7 @@ typedef struct {
 
 
 Process create_process(int pid, int program_size, char instructions[MAX_INSTRUCTIONS][MAX_INSTRUCTION_LENGTH], int num_instructions);
-void finish_process(Process process, int memory_start);
+void finish_process(Process process);
 
 
 Queue* create_queue();

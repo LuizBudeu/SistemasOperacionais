@@ -24,8 +24,9 @@ Process create_process(int pid, int program_size, char instructions[MAX_INSTRUCT
     return process;
 }
 
-void finish_process(Process process, int memory_start) {
-    deallocate_memory(memory_start, process.program_size);
+void finish_process(Process process) {
+    printf("Processo %d terminou.\n", process.pid);
+    deallocate_memory(process.memory_start, process.program_size);
     process.state = PROCESS_STATE_TERMINATED;
     running_process_pid = -1;
 }
