@@ -246,7 +246,7 @@ void continue_to_next_cycle() {
 
 
 void check_commands_txt(Process* process_array, int num_processes, Queue* ready_queue) {
-    FILE* file = fopen("bin/comandos.txt", "r");
+    FILE* file = fopen("comandos.txt", "r");
     if (file == NULL) {
         printf("Erro ao abrir o arquivo de comandos.\n");
         return;
@@ -292,7 +292,7 @@ void check_commands_txt(Process* process_array, int num_processes, Queue* ready_
 
     // Fechar e reabrir o arquivo no modo de escrita para apagar seu conteúdo
     fclose(file);
-    file = fopen("bin/comandos.txt", "w");
+    file = fopen("comandos.txt", "w");
     if (file == NULL) {
         printf("Erro ao reabrir o arquivo de comandos.\n");
         return;
