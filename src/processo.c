@@ -6,6 +6,7 @@
 
 
 extern int running_process_pid;
+extern int MAX_INSTRUCTION_EXECUTION;
 
 
 Process create_process(int pid, int program_size, char instructions[MAX_INSTRUCTIONS][MAX_INSTRUCTION_LENGTH], int num_instructions) {

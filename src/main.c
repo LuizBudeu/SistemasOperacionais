@@ -6,6 +6,7 @@
 #include "../include/memoria.h"
 
 
+void read_config_file();
 void display_process_status(Process process);
 void display_ready_queue(Queue queue);
 void display_memory_bitmap();
@@ -15,9 +16,20 @@ void check_commands_txt(Process* process_array, int num_processes, Queue* ready_
 
 
 int running_process_pid = -1;
+int execution_mode;
+int MAX_INSTRUCTION_EXECUTION;
 
 
 int main() {
+    read_config_file();
+    if (execution_mode == 1) {
+        printf("Modo de execucao preemptivo\n");
+        printf("Maximo de instrucoes por processo: %d\n", MAX_INSTRUCTION_EXECUTION);
+    }
+    else {
+        printf("Modo de execucao sequencial\n");
+    }
+
     init_memory_bitmap();
 
     // Criar a fila de processos prontos
@@ -41,144 +53,287 @@ int main() {
     // Inicializar a geração de números aleatórios com o tempo atual
     srand(time(NULL));
 
-    // Simular a execução dos processos (Round Robin (preemptivo))
-    while (1) {
-        // float fragmentation = calculate_fragmentation(ready_queue);
-        // printf("Fragmentacao externa: %.2f%%\n", fragmentation * 100);
+    if (execution_mode == 1) {
+        // Simular a execução dos processos (Round Robin (preemptivo))
+        while (1) {
+            // float fragmentation = calculate_fragmentation(ready_queue);
+            // printf("Fragmentacao externa: %.2f%%\n", fragmentation * 100);
 
-        // if (fragmentation <= 0.5) {
-        //     compact_memory(ready_queue);
-        //     printf("Memoria compactada.\n");
-        // }
+            // if (fragmentation <= 0.5) {
+            //     compact_memory(ready_queue);
+            //     printf("Memoria compactada.\n");
+            // }
 
-        check_commands_txt(process_array, num_processes, ready_queue);
-
-        if (is_queue_empty(ready_queue)) {
-            printf("Nenhum processo na fila de prontos.\n");
-
-            display_memory_bitmap();
-            printf("\n");
-
-            display_ready_queue(*ready_queue);
-
-            continue_to_next_cycle();
-            continue;
-        }
-
-        Process current_process = dequeue(ready_queue);
-
-        running_process_pid = current_process.pid;
-
-        // Verificar se é um processo de criação ("new PID")
-        if (strcmp(current_process.instructions[0], "create") == 0) {
-            int create_pid = current_process.pid;
-
-            Process process_to_create = get_process_by_pid(process_array, num_processes, create_pid);
-
-            process_to_create.program_size = current_process.program_size;
-            process_to_create.memory_start = allocate_memory(current_process.program_size);
-
-            printf("Processo %d alocado com program_size %d.\n", process_to_create.pid, process_to_create.program_size);
-
-            if (process_to_create.memory_start == -1) {
-                printf("Erro na alocacao de memoria para o processo %d.\n", process_to_create.pid);
-            }
-
-            enqueue(ready_queue, process_to_create);
-
-            printf("Processo %d criado.\n", create_pid);
-
-            display_tcb(current_process);
-            printf("\n");
-
-            display_process_status(current_process);
-            printf("\n");
-
-            display_memory_bitmap();
-            printf("\n");
-
-            display_ready_queue(*ready_queue);
-
-            continue_to_next_cycle();
-
-            continue;
-        }
-
-        // Verificar se é um processo de eliminação ("kill PID")
-        if (strcmp(current_process.instructions[0], "kill") == 0) {
-            int pid_to_kill = current_process.pid;
-            remove_process_by_pid(ready_queue, pid_to_kill);
-
-            printf("Processo %d removido.\n", pid_to_kill);
-
-            display_tcb(current_process);
-            printf("\n");
-
-            display_process_status(current_process);
-            printf("\n");
-
-            display_memory_bitmap();
-            printf("\n");
-
-            display_ready_queue(*ready_queue);
-
-            continue_to_next_cycle();
-
-            continue;
-        }
-
-        int process_remaining_instructions = current_process.num_instructions - current_process.program_counter;
-        int instructions_to_execute = process_remaining_instructions < current_process.max_instructions_execution
-                                            ? process_remaining_instructions
-                                            : current_process.max_instructions_execution;
-
-        for (int i = 0; i < instructions_to_execute; i++) {
             check_commands_txt(process_array, num_processes, ready_queue);
 
-            char* instruction = current_process.instructions[current_process.program_counter];
+            if (is_queue_empty(ready_queue)) {
+                printf("Nenhum processo na fila de prontos.\n");
 
-            display_tcb(current_process);
-            printf("\n");
+                display_memory_bitmap();
+                printf("\n");
 
-            display_process_status(current_process);
-            printf("\n");
+                display_ready_queue(*ready_queue);
 
-            display_memory_bitmap();
-            printf("\n");
-
-            display_ready_queue(*ready_queue);
-
-            // Verificar o fim do processo
-            if (strcmp(instruction, "HTL") == 0) {
-                printf("Processo %d terminou.\n", current_process.pid);
-                deallocate_memory(current_process.memory_start, current_process.program_size);
-                current_process.state = PROCESS_STATE_TERMINATED;
-                running_process_pid = -1;
-                // finish_process(current_process);
-                break;
+                continue_to_next_cycle();
+                continue;
             }
 
-            current_process.program_counter++;
+            Process current_process = dequeue(ready_queue);
 
-            continue_to_next_cycle();
-        }
+            running_process_pid = current_process.pid;
 
-        // Se o processo não terminou, adicioná-lo novamente à fila de prontos
-        if (current_process.state != PROCESS_STATE_TERMINATED) {
-            enqueue(ready_queue, current_process);
-        }
-        else {
-            display_tcb(current_process);
-            printf("\n");
+            // Verificar se é um processo de criação ("new PID")
+            if (strcmp(current_process.instructions[0], "create") == 0) {
+                int create_pid = current_process.pid;
 
-            display_memory_bitmap();
-            printf("\n");
+                Process process_to_create = get_process_by_pid(process_array, num_processes, create_pid);
 
-            display_ready_queue(*ready_queue);
+                process_to_create.program_size = current_process.program_size;
+                process_to_create.memory_start = allocate_memory(current_process.program_size);
 
-            continue_to_next_cycle();
+                printf("Processo %d alocado com program_size %d.\n", process_to_create.pid, process_to_create.program_size);
+
+                if (process_to_create.memory_start == -1) {
+                    printf("Erro na alocacao de memoria para o processo %d.\n", process_to_create.pid);
+                }
+
+                enqueue(ready_queue, process_to_create);
+
+                printf("Processo %d criado.\n", create_pid);
+
+                display_tcb(current_process);
+                printf("\n");
+
+                display_process_status(current_process);
+                printf("\n");
+
+                display_memory_bitmap();
+                printf("\n");
+
+                display_ready_queue(*ready_queue);
+
+                continue_to_next_cycle();
+
+                continue;
+            }
+
+            // Verificar se é um processo de eliminação ("kill PID")
+            if (strcmp(current_process.instructions[0], "kill") == 0) {
+                int pid_to_kill = current_process.pid;
+                remove_process_by_pid(ready_queue, pid_to_kill);
+
+                printf("Processo %d removido.\n", pid_to_kill);
+
+                display_tcb(current_process);
+                printf("\n");
+
+                display_process_status(current_process);
+                printf("\n");
+
+                display_memory_bitmap();
+                printf("\n");
+
+                display_ready_queue(*ready_queue);
+
+                continue_to_next_cycle();
+
+                continue;
+            }
+
+            int process_remaining_instructions = current_process.num_instructions - current_process.program_counter;
+            int instructions_to_execute = process_remaining_instructions < current_process.max_instructions_execution
+                                                ? process_remaining_instructions
+                                                : current_process.max_instructions_execution;
+
+            for (int i = 0; i < instructions_to_execute; i++) {
+                check_commands_txt(process_array, num_processes, ready_queue);
+
+                char* instruction = current_process.instructions[current_process.program_counter];
+
+                display_tcb(current_process);
+                printf("\n");
+
+                display_process_status(current_process);
+                printf("\n");
+
+                display_memory_bitmap();
+                printf("\n");
+
+                display_ready_queue(*ready_queue);
+
+                // Verificar o fim do processo
+                if (strcmp(instruction, "HTL") == 0) {
+                    printf("Processo %d terminou.\n", current_process.pid);
+                    deallocate_memory(current_process.memory_start, current_process.program_size);
+                    current_process.state = PROCESS_STATE_TERMINATED;
+                    running_process_pid = -1;
+                    // finish_process(current_process);
+                    break;
+                }
+
+                current_process.program_counter++;
+
+                continue_to_next_cycle();
+            }
+
+            // Se o processo não terminou, adicioná-lo novamente à fila de prontos
+            if (current_process.state != PROCESS_STATE_TERMINATED) {
+                enqueue(ready_queue, current_process);
+            }
+            else {
+                display_tcb(current_process);
+                printf("\n");
+
+                display_memory_bitmap();
+                printf("\n");
+
+                display_ready_queue(*ready_queue);
+
+                continue_to_next_cycle();
+            }
         }
     }
+    else {
+        // Simular a execução dos processos (sequencial)
+        while (1) {
+            // float fragmentation = calculate_fragmentation(ready_queue);
+            // printf("Fragmentacao externa: %.2f%%\n", fragmentation * 100);
+
+            // if (fragmentation <= 0.5) {
+            //     compact_memory(ready_queue);
+            //     printf("Memoria compactada.\n");
+            // }
+
+            check_commands_txt(process_array, num_processes, ready_queue);
+
+            if (is_queue_empty(ready_queue)) {
+                printf("Nenhum processo na fila de prontos.\n");
+
+                display_memory_bitmap();
+                printf("\n");
+
+                display_ready_queue(*ready_queue);
+
+                continue_to_next_cycle();
+                continue;
+            }
+
+            Process current_process = dequeue(ready_queue);
+
+            running_process_pid = current_process.pid;
+
+            // Verificar se é um processo de criação ("new PID")
+            if (strcmp(current_process.instructions[0], "create") == 0) {
+                int create_pid = current_process.pid;
+
+                Process process_to_create = get_process_by_pid(process_array, num_processes, create_pid);
+
+                process_to_create.program_size = current_process.program_size;
+                process_to_create.memory_start = allocate_memory(current_process.program_size);
+
+                printf("Processo %d alocado com program_size %d.\n", process_to_create.pid, process_to_create.program_size);
+
+                if (process_to_create.memory_start == -1) {
+                    printf("Erro na alocacao de memoria para o processo %d.\n", process_to_create.pid);
+                }
+
+                enqueue(ready_queue, process_to_create);
+
+                printf("Processo %d criado.\n", create_pid);
+
+                display_tcb(current_process);
+                printf("\n");
+
+                display_process_status(current_process);
+                printf("\n");
+
+                display_memory_bitmap();
+                printf("\n");
+
+                display_ready_queue(*ready_queue);
+
+                continue_to_next_cycle();
+
+                continue;
+            }
+
+            // Verificar se é um processo de eliminação ("kill PID")
+            if (strcmp(current_process.instructions[0], "kill") == 0) {
+                int pid_to_kill = current_process.pid;
+                remove_process_by_pid(ready_queue, pid_to_kill);
+
+                printf("Processo %d removido.\n", pid_to_kill);
+
+                display_tcb(current_process);
+                printf("\n");
+
+                display_process_status(current_process);
+                printf("\n");
+
+                display_memory_bitmap();
+                printf("\n");
+
+                display_ready_queue(*ready_queue);
+
+                continue_to_next_cycle();
+
+                continue;
+            }
+
+            // int process_remaining_instructions = current_process.num_instructions - current_process.program_counter;
+            // int instructions_to_execute = process_remaining_instructions < current_process.max_instructions_execution
+            //                                     ? process_remaining_instructions
+            //                                     : current_process.max_instructions_execution;
+
+            for (int i = 0; i < current_process.num_instructions; i++) {
+                check_commands_txt(process_array, num_processes, ready_queue);
+
+                char* instruction = current_process.instructions[current_process.program_counter];
+
+                display_tcb(current_process);
+                printf("\n");
+
+                display_process_status(current_process);
+                printf("\n");
+
+                display_memory_bitmap();
+                printf("\n");
+
+                display_ready_queue(*ready_queue);
+
+                // Verificar o fim do processo
+                if (strcmp(instruction, "HTL") == 0) {
+                    printf("Processo %d terminou.\n", current_process.pid);
+                    deallocate_memory(current_process.memory_start, current_process.program_size);
+                    current_process.state = PROCESS_STATE_TERMINATED;
+                    running_process_pid = -1;
+                    // finish_process(current_process);
+                    break;
+                }
+
+                current_process.program_counter++;
+
+                continue_to_next_cycle();
+            }
+
+            // Se o processo não terminou, adicioná-lo novamente à fila de prontos
+            if (current_process.state != PROCESS_STATE_TERMINATED) {
+                enqueue(ready_queue, current_process);
+            }
+            else {
+                display_tcb(current_process);
+                printf("\n");
+
+                display_memory_bitmap();
+                printf("\n");
+
+                display_ready_queue(*ready_queue);
+
+                continue_to_next_cycle();
+            }
+        }
+    }
+    
 
     free(ready_queue);
     return 0;
@@ -284,5 +439,26 @@ void check_commands_txt(Process* process_array, int num_processes, Queue* ready_
     }
 
     // Fechar o arquivo novamente
+    fclose(file);
+}
+
+
+void read_config_file() {
+    FILE* file = fopen("config.txt", "r");
+    if (file == NULL) {
+        printf("Erro ao abrir o arquivo de configuracao.\n");
+        return;
+    }
+
+    char line[100];
+    while (fgets(line, sizeof(line), file) != NULL) {
+        if (strstr(line, "mode") != NULL) {
+            sscanf(line, "mode %d", &execution_mode);
+        }
+        else if (strstr(line, "max_instructions_execution") != NULL) {
+            sscanf(line, "max_instructions_execution %d", &MAX_INSTRUCTION_EXECUTION);
+        }
+    }
+
     fclose(file);
 }

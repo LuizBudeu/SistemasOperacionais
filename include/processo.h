@@ -4,7 +4,7 @@
 
 #define MAX_INSTRUCTIONS 100
 #define MAX_INSTRUCTION_LENGTH 10
-#define MAX_INSTRUCTION_EXECUTION 2
+// #define MAX_INSTRUCTION_EXECUTION 2
 
 
 // Estados do processo
