@@ -79,7 +79,6 @@ int main() {
 
             Process current_process = dequeue(ready_queue);
             running_process_pid = current_process.pid;
-            printf("Processo %d executando.\n", running_process_pid);
 
             // Verificar se é um processo de criação ("new PID")
             if (strcmp(current_process.instructions[0], "create") == 0) {
