@@ -52,10 +52,8 @@ int is_process_in_queue(Queue* ready_queue, int pid);
 void remove_process_by_pid(Queue* ready_queue, int pid);
 int get_random_pid_not_in_queue(Queue* ready_queue, Process* process_array, int num_processes);
 Process get_process_by_pid(Process* process_array, int num_processes, int pid);
-// void compact_memory(Process processes[], int num_processes);
 void compact_memory(Queue* ready_queue);
-// float calculate_fragmentation(Process processes[], int num_processes);
-float calculate_fragmentation(Queue* ready_queue);
+void update_memory_bitmap(Queue* ready_queue);
 
 
 #endif

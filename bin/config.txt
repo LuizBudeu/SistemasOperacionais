@@ -1,2 +1,2 @@
 mode 1
-max_instructions_execution 3
+max_instructions_execution 2

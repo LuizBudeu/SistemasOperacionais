@@ -1,0 +1,30 @@
+﻿O projeto consiste na simulação de de um sistema operacional, lidando com o gerenciamento de processos e alocação de memória. O programa foi escrito na linguagem C.
+        O programa consiste em duas partes principais (executáveis): um simulador e um prompt de comando. O simulador é responsável pelo gerenciamento de processos e alocação da memória, enquanto o prompt de comando é responsável por captar comandos do usuário, como criar e matar processos. 
+Esses dois executáveis se comunicam através de um arquivo texto “comandos.txt”. A cada comando que o usuário digita no prompt, esse comando é analisado e, se for válido, é escrito no arquivo de texto. Os comandos válidos para este programa são:
+* create -m {unidades_de_memoria}
+* kill {PID}
+        O primeiro comando sinaliza a criação de um processo com o valor de unidades de memória passada no comando, e o segundo comando sinaliza a eliminação do processo com o valor de PID passado.
+
+
+Estrutura de dados:
+A fila de processos prontos foi implementada utilizando uma lista ligada de processos com a funcionalidade de uma fila. É possível colocar e retirar processos da fila, assim como percorrer a lista para eliminar um processo, segundo o comando “kill”. Os processos são representados por structs, que contém os campos:
+* PID
+* Estado do processo
+* Tamanho da memória alocada
+* PC (program counter)
+* Vetor de strings representando as instruções
+* O valor do começo da memória
+* Quantas instruções seguidas pode executar antes do simulador escalonar o processo preemptivamente
+* Número de instruções
+
+
+        Dessa maneira, é possível representar todas as informações relevantes sobre um processo. A TCB é construída a partir das informações de cada processo. O mapa de bits é representado por um vetor de inteiros, com o valor 0 representando que a memória está livre, e com o valor 1 representando que a memória foi alocada por um processo.
+
+
+Funcionamento:
+        No começo da execução do simulador, é checado o arquivo “config.txt”, responsável por definir certas configurações de execução. A opção “mode” define se o simulador irá escalonar os processos não-preemptivamente (valor “0”) ou preemptivamente (valor “1”). Ademais, caso a escolha do modo for “preemptiva”, é considerada mais uma opção “max_instruction_execution” que define quantas instruções podem ser executadas em sequência antes que o escalonador devolva o processo para a fila.
+No começo de cada ciclo, o simulador checa o arquivo por comandos, e se houver comandos válidos, executa a funcionalidade correspondente. Se o comando for do tipo “create”, o simulador coloca na fila de processos prontos um processo do tipo “create”, que escolherá aleatoriamente um processo definido anteriormente, com a alocação de memória passada no comando. Se o comando for do tipo “kill”, o simulador coloca na fila de processos prontos um processo do tipo “kill”, que quando executado, irá percorrer a fila e eliminar o processo com o valor de PID passado no comando, se existir.
+Em seguida, o simulador tira da fila o primeiro processo e executa as instruções. Essas instruções são executadas até o processo acabar (instrução “HTL”) ou quando o número máximo de instruções for ultrapassado (que para fins de demonstração do simulador foi definido como 2), atualizando o PC a cada instrução. Caso o processo tenha acabado, a memória do processo é desalocada e o estado do processo vai para “terminado”. No outro caso, o processo que ainda não acabou é colocado de volta na fila, e o simulador continua para o próximo ciclo de execução. 
+A cada ciclo, são exibidas na tela as informações relacionadas à TCB (como o PID do processo em execução, PC, e o estado dos registradores, que não são relevantes para este projeto), ao status do processo (como em que instrução está), ao mapa de bits, e a fila de processos prontos.
+É importante notar que para o controle do quantum, a cada ciclo de execução é realizado um “getchar” para que seja possível seguir e observar cada ciclo do simulador.
+        Para lidar com a fragmentação externa, a cada ciclo é analisado o estado da memória. Caso mais de 60% da memória esteja alocada, realiza-se o processo de compactação da memória, a fim de combater a fragmentação externa. Nota-se também que esse procedimento de compactação da memória não entra na fila de processos, e em vez disso, é executada diretamente no começo do ciclo de execução do simulador.

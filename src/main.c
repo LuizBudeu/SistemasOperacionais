@@ -40,14 +40,20 @@ int main() {
     char instructions3[][MAX_INSTRUCTION_LENGTH] = {"MUL", "MOV", "SUB", "MOV","MOV", "ADD","HTL"};
     char instructions4[][MAX_INSTRUCTION_LENGTH] = {"MOV", "ADD", "MOV","MOV", "ADD", "HTL"};
     char instructions5[][MAX_INSTRUCTION_LENGTH] = {"SUB", "ADD", "MOV", "ADD","HTL"};
+    char instructions6[][MAX_INSTRUCTION_LENGTH] = {"ADD", "MUL", "SUB", "MOV","SUB", "ADD","HTL"};
+    char instructions7[][MAX_INSTRUCTION_LENGTH] = {"MOV", "SUB", "MOV","MOV", "ADD", "HTL"};
+    char instructions8[][MAX_INSTRUCTION_LENGTH] = {"ADD", "MUL", "MOV", "ADD","HTL"};
 
     Process process1 = create_process(1, 0, instructions1, 9);
     Process process2 = create_process(2, 0, instructions2, 8);
     Process process3 = create_process(3, 0, instructions3, 7);
     Process process4 = create_process(4, 0, instructions4, 6);
     Process process5 = create_process(5, 0, instructions5, 5);
+    Process process6 = create_process(6, 0, instructions6, 7);
+    Process process7 = create_process(7, 0, instructions7, 6);
+    Process process8 = create_process(8, 0, instructions8, 5);
 
-    Process process_array[] = {process1, process2, process3, process4, process5};
+    Process process_array[] = {process1, process2, process3, process4, process5, process6, process7, process8};
     int num_processes = sizeof(process_array) / sizeof(process_array[0]);
 
     // Inicializar a geração de números aleatórios com o tempo atual
@@ -56,13 +62,6 @@ int main() {
     if (execution_mode == 1) {
         // Simular a execução dos processos (Round Robin (preemptivo))
         while (1) {
-            // float fragmentation = calculate_fragmentation(ready_queue);
-            // printf("Fragmentacao externa: %.2f%%\n", fragmentation * 100);
-
-            // if (fragmentation <= 0.5) {
-            //     compact_memory(ready_queue);
-            //     printf("Memoria compactada.\n");
-            // }
 
             check_commands_txt(process_array, num_processes, ready_queue);
 
@@ -79,8 +78,8 @@ int main() {
             }
 
             Process current_process = dequeue(ready_queue);
-
             running_process_pid = current_process.pid;
+            printf("Processo %d executando.\n", running_process_pid);
 
             // Verificar se é um processo de criação ("new PID")
             if (strcmp(current_process.instructions[0], "create") == 0) {
@@ -88,18 +87,19 @@ int main() {
 
                 Process process_to_create = get_process_by_pid(process_array, num_processes, create_pid);
 
-                process_to_create.program_size = current_process.program_size;
-                process_to_create.memory_start = allocate_memory(current_process.program_size);
+                int allocated_memory = allocate_memory(current_process.program_size);
 
-                printf("Processo %d alocado com program_size %d.\n", process_to_create.pid, process_to_create.program_size);
-
-                if (process_to_create.memory_start == -1) {
-                    printf("Erro na alocacao de memoria para o processo %d.\n", process_to_create.pid);
+                // Se não houver memória suficiente para alocar o processo, compactar a memória e tentar novamente
+                if (allocated_memory == -1) {
+                    printf("Erro na alocacao de memoria para o processo %d, compactando memoria.\n", process_to_create.pid);
+                    compact_memory(ready_queue);
+                    allocated_memory = allocate_memory(current_process.program_size);
                 }
 
-                enqueue(ready_queue, process_to_create);
+                process_to_create.program_size = current_process.program_size;
+                process_to_create.memory_start = allocated_memory;
 
-                printf("Processo %d criado.\n", create_pid);
+                enqueue(ready_queue, process_to_create);
 
                 display_tcb(current_process);
                 printf("\n");
@@ -196,14 +196,6 @@ int main() {
     else {
         // Simular a execução dos processos (sequencial)
         while (1) {
-            // float fragmentation = calculate_fragmentation(ready_queue);
-            // printf("Fragmentacao externa: %.2f%%\n", fragmentation * 100);
-
-            // if (fragmentation <= 0.5) {
-            //     compact_memory(ready_queue);
-            //     printf("Memoria compactada.\n");
-            // }
-
             check_commands_txt(process_array, num_processes, ready_queue);
 
             if (is_queue_empty(ready_queue)) {
@@ -228,18 +220,19 @@ int main() {
 
                 Process process_to_create = get_process_by_pid(process_array, num_processes, create_pid);
 
-                process_to_create.program_size = current_process.program_size;
-                process_to_create.memory_start = allocate_memory(current_process.program_size);
+                int allocated_memory = allocate_memory(current_process.program_size);
 
-                printf("Processo %d alocado com program_size %d.\n", process_to_create.pid, process_to_create.program_size);
-
-                if (process_to_create.memory_start == -1) {
-                    printf("Erro na alocacao de memoria para o processo %d.\n", process_to_create.pid);
+                // Se não houver memória suficiente para alocar o processo, compactar a memória e tentar novamente
+                if (allocated_memory == -1) {
+                    printf("Erro na alocacao de memoria para o processo %d, compactando memoria.\n", process_to_create.pid);
+                    compact_memory(ready_queue);
+                    allocated_memory = allocate_memory(current_process.program_size);
                 }
 
-                enqueue(ready_queue, process_to_create);
+                process_to_create.program_size = current_process.program_size;
+                process_to_create.memory_start = allocated_memory;
 
-                printf("Processo %d criado.\n", create_pid);
+                enqueue(ready_queue, process_to_create);
 
                 display_tcb(current_process);
                 printf("\n");
@@ -334,7 +327,6 @@ int main() {
         }
     }
     
-
     free(ready_queue);
     return 0;
     
