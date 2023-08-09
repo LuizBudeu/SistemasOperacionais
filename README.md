@@ -1,5 +1,9 @@
 # Projeto da disciplina PCS3746 (Sistemas Operacionais) - 2023
 
+-   Luiz Guilherme Budeu, N° USP: 11821639
+-   Fernando Falquetto Coelho, Nº USP: 11820260
+-   Lucas Lopes de Paula Junior, Nº USP: 9344880
+
 # Changelog:
 
 -   Criação do mapa de bits
